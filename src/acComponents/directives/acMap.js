@@ -55,7 +55,7 @@ angular.module('acComponents.directives')
         acBreakpoint.setBreakpoints({
           xs: 480,
           sm: 600,
-          md: 1025,
+          md: 1025
         });
 
         $rootScope.$on('breakpoint', function (e, breakpoint) {
@@ -248,7 +248,7 @@ angular.module('acComponents.directives')
               var marker = L.marker(ob.latlng, {
                 icon: L.mapbox.marker.icon({
                   'marker-size': 'small',
-                  'marker-color': (ob.obtype==='incident')?'#f00':'#09c'
+                  'marker-color': (ob.obtype === 'incident') ? '#f00' : '#09c'
                 })
               });
 
@@ -301,48 +301,67 @@ angular.module('acComponents.directives')
           }
 
           if ($scope.subs && $scope.subs.length > 0) {
-            var markers = [];
+
             _.forEach($scope.subs, function (sub) {
               if (sub.obs && sub.obs.length > 1) {
-                var marker = L.marker(sub.latlng, {
-                  icon: L.mapbox.marker.icon({
-                    'marker-size': 'large',
-                    'marker-color': '#d3d3d3'
-                  })
-                });
-
-                marker.on('click', function () {
-                  if (sub.expanded) {
-                    _.remove($scope.obs, {subid: sub.subid});
-                    sub.expanded = false;
-                  } else {
-                    sub.expanded = true;
-                    var obs = [];
-                    var length = sub.obs.length;
-                    _.forEach(sub.obs, function (ob, i) {
-                      var copiedOb = angular.copy(ob);
-                      copiedOb.latlng = [ob.latlng[0] + distance, ob.latlng[1] + (((length-1)* distance)/2 - (i * distance))];
-                      obs.push(copiedOb);
+                var markers = L.markerClusterGroup({
+                  maxClusterRadius: 5,
+                  singleMarkerMode: true,
+                  iconCreateFunction: function (cluster) {
+                    return L.divIcon({
+                      html: '<div><img width="30" src="https://cdn4.iconfinder.com/data/icons/simplicio/128x128/piechart.png"/></div>',
+                      className: 'marker-cluster',
+                      iconSize: new L.Point(40, 40)
                     });
-                    $scope.obs = $scope.obs.concat(obs);
-                    map.setView(sub.latlng, 10);
                   }
-
-                  $scope.$apply();
                 });
 
-                //! set obs to z index 100. Forecast icons are at 1
-                marker.setZIndexOffset(100);
-                markers.push(marker);
+
+                _.forEach(sub.obs, function (ob) {
+                  var marker = L.marker(ob.latlng, {
+                    icon: L.mapbox.marker.icon({
+                      'marker-size': 'small',
+                      'marker-color': (ob.obtype === 'incident') ? '#f00' : '#09c'
+                    })
+                  });
+
+                  markers.on('clusterclick', function () {
+                    //if (sub.expanded) {
+                    //  _.remove($scope.obs, {subid: sub.subid});
+                    //  sub.expanded = false;
+                    //} else {
+                    //  sub.expanded = true;
+                    //  var obs = [];
+                    //  var length = sub.obs.length;
+                    //  _.forEach(sub.obs, function (ob, i) {
+                    //    var copiedOb = angular.copy(ob);
+                    //    copiedOb.latlng = [ob.latlng[0] + distance, ob.latlng[1] + (((length-1)* distance)/2 - (i * distance))];
+                    //    obs.push(copiedOb);
+                    //  });
+                    //  $scope.obs = $scope.obs.concat(obs);
+                    //  map.setView(sub.latlng, 10);
+                    //}
+                    //
+                    //$scope.$apply();
+                  });
+
+                  //! set obs to z index 100. Forecast icons are at 1
+                  marker.setZIndexOffset(100);
+                  //markers.push(marker);
+                  markers.addLayer(marker);
+                });
+
+                map.addLayer(markers);
+
               } else {
                 $scope.obs.push(sub.obs[0]);
               }
             });
 
-            layers.subs = L.featureGroup(markers);
-            layers.subs.bringToFront();
+            //layers.subs = L.featureGroup(markers);
+            //layers.subs.bringToFront();
           } else {
-            layers.subs = undefined;
+            //layers.subs = undefined;
           }
 
         }
