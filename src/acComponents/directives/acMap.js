@@ -296,20 +296,20 @@ angular.module('acComponents.directives')
 
         function createSubsMarkers() {
           var distance = 0.035;
-          if (map.hasLayer(layers.subs)) {
-            map.removeLayer(layers.subs);
-          }
+          //if (map.hasLayer(layers.subs)) {
+          //  map.removeLayer(layers.subs);
+          //}
 
           if ($scope.subs && $scope.subs.length > 0) {
 
             _.forEach($scope.subs, function (sub) {
               if (sub.obs && sub.obs.length > 1) {
-                var markers = L.markerClusterGroup({
+                var markerCluster = L.markerClusterGroup({
                   maxClusterRadius: 5,
-                  singleMarkerMode: true,
+                  zoomToBoundsOnClick: false,
                   iconCreateFunction: function (cluster) {
                     return L.divIcon({
-                      html: '<div><img width="30" src="https://cdn4.iconfinder.com/data/icons/simplicio/128x128/piechart.png"/></div>',
+                      html: '<div><svg width="40" height="40"><circle r="20" cx="20" cy="20" /></svg></div>',
                       className: 'marker-cluster',
                       iconSize: new L.Point(40, 40)
                     });
@@ -325,7 +325,11 @@ angular.module('acComponents.directives')
                     })
                   });
 
-                  markers.on('clusterclick', function () {
+                  markerCluster.on('clusterclick', function (a) {
+                    var visibleOne = markerCluster.getVisibleParent(marker);
+                    console.log(visibleOne.getLatLng());
+                    map.setView(sub.latlng, 10);
+
                     //if (sub.expanded) {
                     //  _.remove($scope.obs, {subid: sub.subid});
                     //  sub.expanded = false;
@@ -345,13 +349,11 @@ angular.module('acComponents.directives')
                     //$scope.$apply();
                   });
 
-                  //! set obs to z index 100. Forecast icons are at 1
                   marker.setZIndexOffset(100);
-                  //markers.push(marker);
-                  markers.addLayer(marker);
+                  markerCluster.addLayer(marker);
                 });
 
-                map.addLayer(markers);
+                map.addLayer(markerCluster);
 
               } else {
                 $scope.obs.push(sub.obs[0]);
